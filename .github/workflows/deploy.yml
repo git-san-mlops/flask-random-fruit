@@ -33,4 +33,4 @@ jobs:
           git config user.name "github-actions"
           git add .
           git commit -m "Deploy from GitHub" || echo "No changes"
-          git push https://$HF_TOKEN@huggingface.co/spaces/sancloudmlops/flask-random-fruit main
+          git push https://sancloudmlops:$HF_TOKEN@huggingface.co/spaces/sancloudmlops/flask-random-fruit main
