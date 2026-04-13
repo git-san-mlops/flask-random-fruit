@@ -1,20 +1,33 @@
-name: Deploy to Hugging Face
+name: CI/CD to Hugging Face
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Install Git LFS
-        run: git lfs install
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
+  deploy:
+    needs: test   
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Clone HF Space
         run: |
@@ -22,9 +35,9 @@ jobs:
 
       - name: Copy files
         run: |
-          rsync -av --exclude='.git' ./ hf-space/
+          rsync -av --exclude='.git' --exclude='.github' ./ hf-space/
 
-      - name: Commit & Push to HF
+      - name: Push to HF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -33,4 +46,5 @@ jobs:
           git config user.name "github-actions"
           git add .
           git commit -m "Deploy from GitHub" || echo "No changes"
-          git push https://sancloudmlops:$HF_TOKEN@huggingface.co/spaces/sancloudmlops/flask-random-fruit main
+          git remote set-url origin https://sancloudmlops:$HF_TOKEN@huggingface.co/spaces/sancloudmlops/flask-random-fruit
+          git push origin main
